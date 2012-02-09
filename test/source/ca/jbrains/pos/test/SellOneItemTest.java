@@ -16,39 +16,47 @@ public class SellOneItemTest {
 			return text;
 		}
 
-		public void setText(String text) {
-			this.text = text;
+		public void displayPrice(String price) {
+			this.text = price;
+		}
+
+		public void displayProductNotFoundMessage(String barcode) {
+			this.text = "No product found for " + barcode;
+		}
+
+		public void displayScanEmptyBarcodeMessage() {
+			this.text = "Scanning error: empty barcode";
 		}
 	}
 
 	public static class Sale {
-		private Display display;
-		private final Map<String, String> pricesByBarcode;
+		private final Display display;
+		private final Catalog catalog;
 
-		public Sale(Display display, Map<String, String> pricesByBarcode) {
+		public Sale(Display display, Catalog catalog) {
 			this.display = display;
-			this.pricesByBarcode = pricesByBarcode;
+			this.catalog = catalog;
 		}
 
 		public void onBarcode(String barcode) {
 			if ("".equals(barcode))
-				display.setText("Scanning error: empty barcode");
-			else if (pricesByBarcode.containsKey(barcode))
-				display.setText(pricesByBarcode.get(barcode));
+				display.displayScanEmptyBarcodeMessage();
+			else if (catalog.hasBarcode(barcode))
+				display.displayPrice(catalog.findPrice(barcode));
 			else
-				display.setText("No product found for " + barcode);
+				display.displayProductNotFoundMessage(barcode);
 		}
 	}
 
 	@Test
 	public void productFound() throws Exception {
 		Display display = new Display();
-		Sale sale = new Sale(display, new HashMap<String, String>() {
+		Sale sale = new Sale(display, new Catalog(new HashMap<String, String>() {
 			{
 				put("12345", "EUR 7,95");
 				put("23456", "EUR 12,50");
 			}
-		});
+		}));
 
 		sale.onBarcode("12345");
 
@@ -58,12 +66,12 @@ public class SellOneItemTest {
 	@Test
 	public void anotherProductFound() throws Exception {
 		Display display = new Display();
-		Sale sale = new Sale(display, new HashMap<String, String>() {
+		Sale sale = new Sale(display, new Catalog(new HashMap<String, String>() {
 			{
 				put("12345", "EUR 7,95");
 				put("23456", "EUR 12,50");
 			}
-		});
+		}));
 
 		sale.onBarcode("23456");
 
@@ -73,29 +81,30 @@ public class SellOneItemTest {
 	@Test
 	public void productNotFound() throws Exception {
 		Display display = new Display();
-		Sale sale = new Sale(display, new HashMap<String, String>() {
+		Sale sale = new Sale(display, new Catalog(new HashMap<String, String>() {
 			{
 				put("12345", "EUR 7,95");
 				put("23456", "EUR 12,50");
 			}
-		});
+		}));
 
 		sale.onBarcode("99999");
 
 		assertEquals("No product found for 99999", display.getText());
 	}
+
 	@Test
 	public void emptyBarcode() throws Exception {
 		Display display = new Display();
-		Sale sale = new Sale(display, new HashMap<String, String>() {
+		Sale sale = new Sale(display, new Catalog(new HashMap<String, String>() {
 			{
 				put("12345", "EUR 7,95");
 				put("23456", "EUR 12,50");
 			}
-		});
-		
+		}));
+
 		sale.onBarcode("");
-		
+
 		assertEquals("Scanning error: empty barcode", display.getText());
 	}
 }
