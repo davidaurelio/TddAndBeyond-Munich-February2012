@@ -18,7 +18,16 @@ public class SellOneItemTest {
 		}
 
 		public void onBarcode(String barcode) {
-			display.displayPrice(catalog.findPrice(barcode));
+			if ("".equals(barcode)) {
+				display.displayScannedEmptyBarcodeMessage();
+				return;
+			}
+			
+			Price price = catalog.findPrice(barcode);
+			if (price == null)
+				display.displayProductNotFoundMessage(barcode);
+			else
+				display.displayPrice(price);
 		}
 	}
 
@@ -26,7 +35,7 @@ public class SellOneItemTest {
 		public static Price euroCents(int euroCents) {
 			return new Price();
 		}
-		
+
 		@Override
 		public String toString() {
 			return "a Price";
@@ -35,6 +44,10 @@ public class SellOneItemTest {
 
 	public interface Display {
 		void displayPrice(Price price);
+
+		void displayProductNotFoundMessage(String barcode);
+
+		void displayScannedEmptyBarcodeMessage();
 	}
 
 	public interface Catalog {
@@ -49,17 +62,52 @@ public class SellOneItemTest {
 
 		final Catalog catalog = mockery.mock(Catalog.class);
 		final Display display = mockery.mock(Display.class);
-		
+
 		mockery.checking(new Expectations() {
 			{
 				allowing(catalog).findPrice(with("12345"));
 				will(returnValue(price));
-				
+
 				oneOf(display).displayPrice(with(price));
 			}
 		});
-		
+
 		SaleController saleController = new SaleController(catalog, display);
 		saleController.onBarcode("12345");
+	}
+
+	@Test
+	public void productNotFound() throws Exception {
+		final Catalog catalog = mockery.mock(Catalog.class);
+		final Display display = mockery.mock(Display.class);
+
+		mockery.checking(new Expectations() {
+			{
+				allowing(catalog).findPrice(with("12345"));
+				will(returnValue(null));
+
+				oneOf(display).displayProductNotFoundMessage(with("12345"));
+			}
+		});
+
+		SaleController saleController = new SaleController(catalog, display);
+		saleController.onBarcode("12345");
+	}
+
+	@Test
+	public void emptyBarcode() throws Exception {
+		final Catalog catalog = mockery.mock(Catalog.class);
+		final Display display = mockery.mock(Display.class);
+
+		mockery.checking(new Expectations() {
+			{
+				ignoring(catalog);
+
+				oneOf(display).displayScannedEmptyBarcodeMessage();
+			}
+		});
+
+		SaleController saleController = new SaleController(catalog, display);
+		saleController.onBarcode("");
 	}
 }
