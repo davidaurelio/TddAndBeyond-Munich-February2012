@@ -22,7 +22,7 @@ public class SellOneItemTest {
 				display.displayScannedEmptyBarcodeMessage();
 				return;
 			}
-			
+
 			Price price = catalog.findPrice(barcode);
 			if (price == null)
 				display.displayProductNotFoundMessage(barcode);
@@ -32,8 +32,29 @@ public class SellOneItemTest {
 	}
 
 	public static class Price {
+		private final int euroCents;
+
+		public Price(int euroCents) {
+			this.euroCents = euroCents;
+		}
+
 		public static Price euroCents(int euroCents) {
-			return new Price();
+			return new Price(euroCents);
+		}
+
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof Price) {
+				Price that = (Price) other;
+				return this.euroCents == that.euroCents;
+			} else {
+				return false;
+			}
+		}
+		
+		@Override
+		public int hashCode() {
+			return euroCents;
 		}
 
 		@Override
