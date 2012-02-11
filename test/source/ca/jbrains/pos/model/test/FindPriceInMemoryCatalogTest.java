@@ -1,16 +1,14 @@
 package ca.jbrains.pos.model.test;
 
-import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
 import java.util.Map;
 
-import org.junit.Test;
 
 import ca.jbrains.pos.controller.test.SellOneItemTest.Catalog;
 import ca.jbrains.pos.controller.test.SellOneItemTest.Price;
 
-public class FindPriceInMemoryCatalogTest {
+public class FindPriceInMemoryCatalogTest extends FindPriceInCatalogContract {
 	public static class InMemoryCatalog implements Catalog {
 		private final Map<String, Price> pricesByBarcode;
 
@@ -23,20 +21,19 @@ public class FindPriceInMemoryCatalogTest {
 		}
 	}
 
-	@Test
-	public void productFound() throws Exception {
-		InMemoryCatalog catalog = new InMemoryCatalog(
-				Collections.<String, Price> singletonMap("12345",
-						Price.euroCents(795)));
-
-		assertEquals(Price.euroCents(795), catalog.findPrice("12345"));
+	@Override
+	public Catalog createCatalogWith(String barcode, Price price) {
+		return new InMemoryCatalog(Collections.<String, Price> singletonMap(
+				barcode, price));
 	}
 
-	@Test
-	public void productNotFound() throws Exception {
-		InMemoryCatalog catalog = new InMemoryCatalog(
-				Collections.<String, Price> emptyMap());
+	@Override
+	public Catalog createCatalogWithout(String barcodeToAvoid) {
+		return new InMemoryCatalog(Collections.<String, Price> singletonMap(
+				"not " + barcodeToAvoid, anyPrice()));
+	}
 
-		assertEquals(null, catalog.findPrice("12345"));
+	private Price anyPrice() {
+		return Price.euroCents(1000000);
 	}
 }

@@ -51,7 +51,7 @@ public class SellOneItemTest {
 				return false;
 			}
 		}
-		
+
 		@Override
 		public int hashCode() {
 			return euroCents;
@@ -59,7 +59,11 @@ public class SellOneItemTest {
 
 		@Override
 		public String toString() {
-			return "a Price";
+			return "Û" + getEuro();
+		}
+
+		public double getEuro() {
+			return euroCents / 100.0d;
 		}
 	}
 
